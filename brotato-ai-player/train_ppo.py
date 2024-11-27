@@ -22,8 +22,10 @@ BATCH_SIZE = 256
 N_STEPS = 2048
 N_EPOCHS = 10
 
-TOTAL_TIMESTEPS = N_STEPS * 12 * 12
-MODEL_SAVE_FREQ = N_STEPS * 12
+ONE_HOUR_STEPS = N_STEPS * 12
+
+TOTAL_TIMESTEPS = ONE_HOUR_STEPS * 6
+MODEL_SAVE_FREQ = ONE_HOUR_STEPS
 
 
 class CustomCallback(BaseCallback):
@@ -121,17 +123,19 @@ def train():
     if os.path.exists(MODEL_FILE):
         print(f'load: {MODEL_FILE}')
 
-        learning_rate = 3e-4    # 1.5e-5  # 3e-5    # 1.5e-4
+        learning_rate = 3e-5    # 1.5e-4
         # gamma = 0.9
         # clip_range = 0.2
         custom_objects = {
             'learning_rate': learning_rate,
             # 'gamma': gamma,
-        #     'clip_range': clip_range,
+            # 'clip_range': clip_range,
 
             'device': device,
         }
         model = PPO.load(MODEL_FILE, env, custom_objects=custom_objects)
+        model.ent_coef = 0.1
+
         # model = PPO.load(MODEL_FILE, env)
     else:
         print(f'new ppo')
@@ -141,7 +145,7 @@ def train():
 
                     learning_rate = 3e-4,   # 1e-4,   #
 
-                    ent_coef = 0.01, # 0.0,
+                    ent_coef = 0.1,    # 0.01, # 0.0,
                     vf_coef = 0.5,
                     gamma = 0.99,
                     gae_lambda = 0.95,

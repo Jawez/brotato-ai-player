@@ -42,14 +42,6 @@ brotato-ai-player
         ppo_brotato.zip     # 强化学习模型
 ```
 
-训练基于以下游戏设置：
-
-<img src="./brotato-ai-player/assets/options-general.jpg" alt="一般设定">
-
-<img src="./brotato-ai-player/assets/options-gameplay.jpg" alt="游戏操作">
-
-> 游戏窗口尺寸默认为960x540
-
 ## 环境搭建
 
 创建与启用 conda 环境：
@@ -69,13 +61,27 @@ pip install -r requirements.txt
 
 **注意事项**：
 
-1. 游戏设置需尽可能与训练采用的设置保持一致
+1. 游戏设置需与训练采用的设置保持一致，如泥地背景、角色头顶不显示血条等，参考下方设置附图
+2. 当前强化学习模型仅训练了全能者角色使用远程武器在难度0下通过第20波的场景，其他场景需要另外训练
+3. 在当前强化学习模型基础上通关需要注意角色属性值（加适量速度、护甲、最大生命值，并保证伤害足够），参考下方属性附图
 
 启动游戏，执行以下命令运行强化学习模型，手动操作游戏进入地图场景后模型开始控制角色移动：
 
 ```shell
 python .\brotato-ai-player\main.py
 ```
+
+训练基于以下游戏设置（训练时未涉及 DLC 内容，可以不启用 DLC）：
+
+<img src="./brotato-ai-player/assets/options-general.jpg" alt="一般设定">
+
+<img src="./brotato-ai-player/assets/options-gameplay.jpg" alt="游戏操作">
+
+> 游戏窗口尺寸默认为960x540
+
+通关属性参考：
+
+<img src="./brotato-ai-player/assets/stats.jpg" alt="通关属性参考">
 
 ## 训练图像分类模型
 
@@ -136,7 +142,8 @@ python .\brotato-ai-player\train_ppo.py
 
 ### 训练图像分类模型报错提示"Dataset not found"
 
-将`train_img_cls.py`中的`DATA_PATH`改为`brotato-cls`目录的绝对路径
+1. 将`train_img_cls.py`中的`DATA_PATH`改为`brotato-cls`目录的绝对路径
+2. 修改 Ultralytics 设置（[修改设置 -Ultralytics YOLO 文档](https://docs.ultralytics.com/zh/quickstart/#modifying-settings)）：将设置中的`datasets_dir`改为项目`datasets`目录，如：`"datasets_dir": "D:\\projects\\brotato-ai-player\\datasets"`（Ultralytics 配置文件路径参考：`C:\Users\<用户名>\AppData\Roaming\Ultralytics\settings.json`）
 
 ## 引用项目
 

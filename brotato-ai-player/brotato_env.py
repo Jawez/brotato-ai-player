@@ -89,6 +89,7 @@ class BrotatoEnv(gym.Env):
         self.prev_material = 0
         self.init_material = 0
 
+        self.last_material_reward_step = 0
         self.material_reward_coefficient = 1.0
         self.hp_step_count = 0
         self.time_reward_sum = 0.0
@@ -104,6 +105,9 @@ class BrotatoEnv(gym.Env):
         terminated = False
         truncated = False
         info = {}
+
+        self.global_step_count += 1
+        self.step_count += 1
 
         start_time = time.time()
 
@@ -194,9 +198,6 @@ class BrotatoEnv(gym.Env):
         scene_elapsed = scene_time - obs_time
         handle_elapsed = end_time - scene_time
 
-        self.global_step_count += 1
-
-        self.step_count += 1
         self.step_elapsed_sum += time_elapsed
         self.step_average_elapsed = self.step_elapsed_sum / self.step_count
 
@@ -342,10 +343,11 @@ class BrotatoEnv(gym.Env):
     # Reward
     def __calc_reward(self, hp, material, wave_result: brotato.WaveResult = None):
         TIME_REWARD_COEFFICIENT = 0.1
-        HP_REWARD_COEFFICIENT = 0.2
+        HP_REWARD_COEFFICIENT = 0.15
         HP_STEP_REWARD_COUNT = 10
-        HP_STEP_REWARD_COEFFICIENT = 0.01
+        HP_STEP_REWARD_COEFFICIENT = 0.015
         MATERIAL_REWARD_COEFFICIENT = 0.02
+        MAX_NO_MATERIAL_REWARD_STEP = 50
 
         material_coefficient = MATERIAL_REWARD_COEFFICIENT
 
@@ -369,17 +371,23 @@ class BrotatoEnv(gym.Env):
                 hp_reward = 1 * HP_REWARD_COEFFICIENT
 
             self.hp_step_count += 1
+
             hp_step_reward = int(self.hp_step_count / HP_STEP_REWARD_COUNT) * HP_STEP_REWARD_COEFFICIENT
             if hp_step_reward > 0.1:
                 hp_step_reward = 0.1
 
                 material_coefficient = 0.1
 
+            if self.step_count > self.last_material_reward_step + MAX_NO_MATERIAL_REWARD_STEP:
+                hp_step_reward = 0
+
         if wave_result is None:
             # material reward
             # 通过时有收获加成增加材料，不能计算奖励
             if material > self.prev_material:
                 material_reward = (material - self.prev_material) * material_coefficient    # * self.material_reward_coefficient
+
+                self.last_material_reward_step = self.step_count
 
         elif wave_result == brotato.WaveResult.COMPLETED:
             # time_reward += self.current_wave_timer * TIME_REWARD_COEFFICIENT
@@ -544,6 +552,7 @@ class BrotatoEnv(gym.Env):
 
         return material
 
+    # Note: 扣血过程中（血条背景色变为白色）会出现识别错误的情况
     def __get_hp(self, observation, reset=False):
         hp = self.prev_hp
         total_hp = self.prev_total_hp
